@@ -1,0 +1,10 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  margin-top: 25%;
+  margin-left: 50%;
+  transform: translate(-50%, -30%);
+}
+canvas {
+  display: block;
+}
