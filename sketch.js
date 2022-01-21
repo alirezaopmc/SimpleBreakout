@@ -1,15 +1,13 @@
 let W = 400;
 let H = 400;
-
-
 // Noerbline was here 50 (30)
 
 // Configs
-let speedX = 1;
-let speedY = 1;
+let speedX = 3;
+let speedY = -3;
 
 
-// Django King
+// Django King (Matin)
 class Grid {
   constructor(n, m, w, h) {
     this.n = n;
@@ -43,7 +41,7 @@ class Grid {
         let x = j * w;
         let y = i * h;
         
-        row.push(new Block(x, y, w, h, 'white', i, j));
+        row.push(new Block(x, y, w, h, 'white', i, j)); // na na
       }
       
       this.grid.push(row)
@@ -68,7 +66,13 @@ class Grid {
     )
   }
 
-  render() {
+  delete(i, j){
+    let block = this.grid[i][j]
+    block.x = -block.width;
+    block.y = -block.health;
+  }
+
+  render(obj) {
     push();
 
     this.grid.forEach(
@@ -80,62 +84,7 @@ class Grid {
 
 }
 
-let grid = new Grid(5, 5, W, H);
 
-
-
-
-
-// Fatemeh 50 (30)
-class Ball {
-  constructor(x, y, r) {
-    this.x = x;
-    this.y = y;
-    this.r = r;
-  }
-
-  show() {
-    fill(color(0, 0, 255));
-    circle(this.x, this.y, this.r);
-  }
-  move(){
-    // this.x-=speedX;
-    // this.y-=speedY;
-
-    if ( this.y <= 0 + r ){
-      speedY *= -1;
-    }
-    
-    else if ( this.y >= H - r ){
-      speedY *= -1;
-    }
-
-    if ( this.x <= 0 + r ){
-      speedY *= -1;
-    }
-
-    else if ( this.x <= W - r ){
-      speedY *= -1;
-    }
-
-  }
-  
-  render(){
-    push()
-    this.show();
-    this.move();
-    pop()
-  }
-
-  collision(){
-    
-    
-    if (this.x <= 0 || this.x >= width){
-      speedX *= -1;
-      // in magar inke akhare in tabe bashe
-    }
-  }
-}
 
 // Kourosh 50 (40)
 class Block {
@@ -149,7 +98,7 @@ class Block {
     this.i = i;
     this.j = j;
   }
-
+  
   getRandomHealth() {
     return 10 + Math.floor(10 * Math.random());
   }
@@ -161,21 +110,87 @@ class Block {
     
     this.break();
   }
-
+  
   // TODO [ Tashakori & Matin ]
   // It must be deleted in the grid table !!!
-  // break(){
+    // break(){
   //   if (this.health <= 0){
-  //     this.health = 0;
-  //   }
-  // }
-
-  render() {
+    //     this.health = 0;
+    //   }
+    // }
+  
+  render(obj) {
     push();
-
+    fill(this.color);
     rect(this.x, this.y, this.width, this.height);
     
     pop();
+  }
+}
+
+
+// Fatemeh 50 (30)
+class Ball {
+  constructor(x, y, r) {
+    this.x = x;
+    this.y = y;
+    this.r = r;
+  }
+
+  show() {
+    fill('white');
+    circle(this.x, this.y, this.r);
+  }
+
+  speedChecker(){
+    if (this.x + this.r / 2 > W) speedX *= -1;
+    if (this.x - this.r / 2 < 0) speedX *= -1;
+    if (this.y - this.r / 2 < 0) speedY *= -1;
+    // if (this.y + this.r / 2 > H) speedY *= -1;
+  }
+
+  move(){
+
+    this.x += speedX;
+    this.y += speedY;
+    
+    this.speedChecker()
+  }
+
+  render(obj){
+    push()
+
+    this.show();
+    this.move();
+    this.collision(obj)
+    
+    pop()
+  }
+
+  collision(obj){
+
+    // board
+    let board = obj.board
+    
+    // TODO
+    // collision detection for board
+
+    // grid
+    let grid = obj.grid
+    grid.grid.forEach(row => row.forEach(
+      block => {
+          if( block.y + block.height > this.y - this.r && (this.x >= block.x && this.x <= block.x + block.width) ){
+              speedY *= -1
+              grid.delete(block.i, block.j)
+          }
+      }
+      // TODO
+      // collision detection for blocks 
+    ))
+    //
+    if(board.y < this.y + this.r && (board.x - board.width/2 <= this.x && this.x <= board.x + board.width)){
+        speedY *= -1
+    }
   }
 }
 
@@ -183,34 +198,52 @@ class Block {
 
 // mouseX, mouseY => mouse location
 class Board {
-  constructor(x, y, width, height){
+  constructor(y, width, height){
     this.width = width;
     this.height = height;
-    this.x = x;
+    this.x = null;
     this.y = y ;  
   }
 
-  render() {
+  render(obj) {
     push();
     fill(170);
     rectMode(CENTER);
-    rect(mouseX, this.y, this.width, this.height , this.height);
+    this.x = mouseX;
+
+    if (mouseX - this.width / 2 < 0) {
+        this.x = this.width / 2
+    }
+
+    if (mouseX + this.width / 2 > W) {
+        this.x = W - this.width / 2
+    }
+    rect(this.x, this.y, this.width, this.height);
     pop();
   }
 }
 
-let board = new Board(W / 2 , (7 * H) / 8 , 40 , 15);
+// let board = new Board(W / 2 , (7 * H) / 8 , 40 , 15);
+let board = new Board(H - 15 , 60 , 15);
 // let grid = new Grid();
 
 function setup() {
   createCanvas(W, H);
 }
 
+let grid = new Grid(10, 5, W, H / 2);
+let ball = new Ball(200, 300, 15)
+
+// global object
+let obj = {
+  'grid': grid,
+  'ball': ball,
+  'board': board
+}
+
 // 60 bar too 1 sanie call mishe
 function draw() {
-  background(220);
+  background(0);
   
-  
-  grid.render();
-  board.render();
+  Object.values(obj).forEach(object => object.render(obj))
 }
